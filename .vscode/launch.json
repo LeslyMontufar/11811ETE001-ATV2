@@ -1,0 +1,31 @@
+{
+    // Use o IntelliSense para saber mais sobre os atributos possíveis.
+    // Focalizar para exibir as descrições dos atributos existentes.
+    // Para obter mais informações, acesse: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "cwd": "${workspaceRoot}/src",
+            "executable": "${workspaceRoot}/src/blinky.elf",
+            "name": "Debug Blinky",
+            "request": "launch",
+            "type": "cortex-debug",
+            "preLaunchTask": "Make all",
+            "servertype": "openocd",
+            "device": "STM32F103C8",
+            "configFiles": [
+              "interface/stlink.cfg",
+              "target/stm32f1x.cfg"
+            ],
+            "postLaunchCommands": [
+              "monitor init",
+              "monitor reset halt",
+              "monitor flash write_image erase blinky.bin 0x08000000"
+            ],
+            "linux": {
+              "svdFile": "${workspaceRoot}/svd/STM32F103.svd"
+            },
+            "runToEntryPoint": "main",
+          }
+    ]
+}

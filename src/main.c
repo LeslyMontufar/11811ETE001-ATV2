@@ -1,15 +1,19 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
+
 #define LED_DELAY 50000
-#define PINO_LED 13
+#define LED_PIN 13
+#define BUTTON_PIN 0
 
 /* AHB1 Base Addresses ******************************************************/
 
-#define STM32_RCC_BASE      0x40021000     /* 0x40021000 - 0x400213ff: Reset and Clock control RCC */
+#define STM32_RCC_BASE      0x40021000      /* 0x40021000 - 0x400213ff: Reset and Clock control RCC */
 
 /* AHB2 Base Addresses ******************************************************/
 
-#define STM32_GPIOC_BASE    0x40011000     /* 0x40011000 - 0x400113ff: GPIO Port C */
+#define STM32_GPIOA_BASE    0x40010800      /* 0x40010800 - 0x40010bff: GPIO Port A */ // mudar aqui
+#define STM32_GPIOC_BASE    0x40011000      /* 0x40011000 - 0x400113ff: GPIO Port C */
 
 /* Register Offsets *********************************************************/
 
@@ -19,7 +23,7 @@
 #define STM32_GPIO_CRH_OFFSET       0x0004  /* Port configuration register high */
 
 #define STM32_GPIO_BSRR_OFFSET      0x0010  /* Port bit set/reset register */
-
+#define STM32_GPIO_IDR_OFFSET       0x0008  /* Port input data register */
 
 /* Register Addresses *******************************************************/
 
@@ -27,12 +31,17 @@
 
 #define STM32_GPIOC_CRL                 (STM32_GPIOC_BASE+STM32_GPIO_CRL_OFFSET)
 #define STM32_GPIOC_CRH                 (STM32_GPIOC_BASE+STM32_GPIO_CRH_OFFSET)
-
 #define STM32_GPIOC_BSRR                (STM32_GPIOC_BASE+STM32_GPIO_BSRR_OFFSET)
 
-/* APB2 Peripheral Clock enable register (RCC_APB2ENR) */
+#define STM32_GPIOA_CRL                 (STM32_GPIOA_BASE+STM32_GPIO_CRL_OFFSET)
+#define STM32_GPIOA_CRH                 (STM32_GPIOA_BASE+STM32_GPIO_CRH_OFFSET)
+#define STM32_GPIOA_IDR                 (STM32_GPIOA_BASE+STM32_GPIO_IDR_OFFSET)
+
+/* APB2 Peripheral Clock ENable Register (RCC_APB2ENR) */
 
 #define RCC_APB2ENR_IOPCEN         (1 << 4)    /* Bit 4 IOPCEN: IO port C clock enable */
+#define RCC_APB2ENR_IOPAEN         (1 << 2)    /* Bit 2 IOPAEN: IO port A clock enable */
+
 
 /* Port configuration register */
 
@@ -60,8 +69,17 @@
 #define GPIO_CNF_MASK(n)              (3 << GPIO_CNF_SHIFT(n))
 
 /* GPIO port bit set/reset register */
+
 #define GPIO_BSRR_SET(n)              (1 << (n))
 #define GPIO_BSRR_RST(n)              (1 << (n + 16))
+
+/* GPIO port input data register */
+
+
+
+uint32_t set_GPIO_PUSH_PULL(int, uint32_t);
+uint32_t piscaLed(uint32_t, int, bool,int);
+bool button_pressed(uint32_t,int);
 
 int main(int argc, char *argv[])
 {
@@ -70,37 +88,65 @@ int main(int argc, char *argv[])
 
     /* Ponteiros para registradores */
     uint32_t *pRCC_APB2ENR  = (uint32_t *)STM32_RCC_APB2ENR;
+    
     uint32_t *pGPIOC_CRL    = (uint32_t *)STM32_GPIOC_CRL;
     uint32_t *pGPIOC_CRH    = (uint32_t *)STM32_GPIOC_CRH;
     uint32_t *pGPIOC_BSRR   = (uint32_t *)STM32_GPIOC_BSRR;
 
-    /* Habilita clock GPIOC */
+    uint32_t *pGPIOA_CRL    = (uint32_t *)STM32_GPIOA_CRL;
+    uint32_t *pGPIOA_CRH    = (uint32_t *)STM32_GPIOA_CRH;
+    uint32_t *pGPIOA_IDR   = (uint32_t *)STM32_GPIOA_IDR;
+    
+    /* Habilita clock GPIOC e A */
     reg  = *pRCC_APB2ENR;
     reg |= RCC_APB2ENR_IOPCEN;
+    reg |= RCC_APB2ENR_IOPAEN;
     *pRCC_APB2ENR = reg;
     
     /* Configura PC13 como saida General purpose output push-pull */
-    reg = ((PINO_LED < 8)? *pGPIOC_CRL : *pGPIOC_CRH);
-
-    reg = *pGPIOC_CRH;
-    reg &= ~GPIO_CNF_MASK(PINO_LED);
-    reg |= (GPIO_CNF_O_GPO_PUSH_PULL << GPIO_CNF_SHIFT(PINO_LED));
-
-    reg &= ~GPIO_MODE_MASK(PINO_LED);
-    reg |= (GPIO_MODE_OUTPUT_10MHZ << GPIO_MODE_SHIFT(PINO_LED));
-
-    if(PINO_LED < 8) *pGPIOC_CRL = reg; 
-    else *pGPIOC_CRH = reg;
-    // *pGPIOC_CRH = 0x1 << 20;
+    if(LED_PIN < 8) *pGPIOC_CRL = set_GPIO_PUSH_PULL(LED_PIN,(uint32_t)*pGPIOC_CRL); 
+    else *pGPIOC_CRH = set_GPIO_PUSH_PULL(LED_PIN,(uint32_t)*pGPIOC_CRH); 
+    if(BUTTON_PIN < 8) *pGPIOA_CRL = set_GPIO_PUSH_PULL(BUTTON_PIN,(uint32_t)*pGPIOA_CRL); 
+    else *pGPIOA_CRH = set_GPIO_PUSH_PULL(BUTTON_PIN,(uint32_t)*pGPIOA_CRH); 
+    
+    bool led_status = false;
+    int delay = LED_DELAY;
 
     while(1)
     {
-        *pGPIOC_BSRR = GPIO_BSRR_SET(PINO_LED);
-        for(i = 0; i < LED_DELAY; i++);
-        *pGPIOC_BSRR = GPIO_BSRR_RST(PINO_LED);
-        for(i = 0; i < LED_DELAY; i++);
+        *pGPIOC_BSRR = piscaLed((uint32_t)*pGPIOC_BSRR, LED_PIN, led_status,LED_DELAY);
+        led_status = !led_status;
+        
+        if(button_pressed((uint32_t)*pGPIOA_IDR,BUTTON_PIN)) delay = LED_DELAY;
+        else delay = 3*LED_DELAY;
+
     }
 
     return EXIT_SUCCESS;
 }
 
+uint32_t set_GPIO_PUSH_PULL(int led_pin, uint32_t reg){ // 10MHz
+
+    reg &= ~GPIO_CNF_MASK(led_pin);
+    reg |= (GPIO_CNF_O_GPO_PUSH_PULL << GPIO_CNF_SHIFT(led_pin));
+
+    reg &= ~GPIO_MODE_MASK(led_pin);
+    reg |= (GPIO_MODE_OUTPUT_10MHZ << GPIO_MODE_SHIFT(led_pin));
+
+    return reg;
+}
+
+uint32_t piscaLed(uint32_t reg, int led_pin, bool led_status, int delay){
+    
+    if(led_status) reg = GPIO_BSRR_SET(led_pin);
+    else reg = GPIO_BSRR_RST(led_pin);
+    for(int i = 0; i < delay; i++);
+
+    return reg;
+}
+
+bool button_pressed(uint32_t reg, int b_pin){
+    reg &= (1 << b_pin);
+    if(reg == (1 << b_pin)) return true;
+    else return false;
+}
