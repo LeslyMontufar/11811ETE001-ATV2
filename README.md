@@ -23,10 +23,10 @@ As modificações ocorreram no arquivo [`main.c`](https://github.com/LeslyMontuf
 
 1. Decidi utilizar o pino A0 como "botão" para quando pressionado o led piscar com maior frequência. 
 2. Para isso, é preciso configurar a porta GPIO A como input do tipo pull up.
-3. Verificando no Manual de Referência da placa STM32F103xx, posso encontrar o endereço dos registros que precisarei modificar na memória e com quais valores setá-los:
+3. Verificando no [Manual de Referência da placa STM32F103xx](https://www.st.com/resource/en/reference_manual/cd00171190-stm32f101xx-stm32f102xx-stm32f103xx-stm32f105xx-and-stm32f107xx-advanced-arm-based-32-bit-mcus-stmicroelectronics.pdf), posso encontrar o endereço dos registros que precisarei modificar na memória e com quais valores setá-los:
 
 ```
-/* Base Register Addresses *********************************************************/
+/* APB2 Base Addresses ******************************************************/
 
 #define STM32_GPIOA_BASE                0x40010800      /* 0x40010800 - 0x40010bff: GPIO Port A */
 
@@ -43,6 +43,12 @@ As modificações ocorreram no arquivo [`main.c`](https://github.com/LeslyMontuf
 /* APB2 Peripheral Clock ENable Register (RCC_APB2ENR) */
 
 #define RCC_APB2ENR_IOPAEN              (1 << 2)        /* Bit 2 IOPAEN: IO port A clock enable */
+
+/* Functions */
+
+uint32_t set_GPIO(uint32_t, int, int, int);
+uint32_t piscaLed(uint32_t, int, bool,int);
+bool button_pressed(uint32_t,int);
 
 ```
 

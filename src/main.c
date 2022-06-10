@@ -6,11 +6,11 @@
 #define LED_PIN 13
 #define BUTTON_PIN 0
 
-/* AHB1 Base Addresses ******************************************************/
+/* AHB Base Addresses ******************************************************/
 
 #define STM32_RCC_BASE      0x40021000      /* 0x40021000 - 0x400213ff: Reset and Clock control RCC */
 
-/* AHB2 Base Addresses ******************************************************/
+/* APB2 Base Addresses ******************************************************/
 
 #define STM32_GPIOA_BASE    0x40010800      /* 0x40010800 - 0x40010bff: GPIO Port A */ // mudar aqui
 #define STM32_GPIOC_BASE    0x40011000      /* 0x40011000 - 0x400113ff: GPIO Port C */
@@ -73,13 +73,12 @@
 #define GPIO_BSRR_SET(n)              (1 << (n))
 #define GPIO_BSRR_RST(n)              (1 << (n + 16))
 
-/* GPIO port input data register */
-
-
+/* Functions */
 
 uint32_t set_GPIO(uint32_t, int, int, int);
 uint32_t piscaLed(uint32_t, int, bool,int);
 bool button_pressed(uint32_t,int);
+
 
 int main(int argc, char *argv[])
 {
