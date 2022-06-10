@@ -117,7 +117,7 @@ bool button_pressed(uint32_t reg, int b_pin){
 
 ## Gravando o código no STM32F103
 
-1. Para conectar o gravador ST-LINK no WSL2, seguir os passos descritos no [roteiro]().
+1. Para conectar o gravador ST-LINK no WSL2, seguir os passos descritos no [roteiro](https://github.com/LeslyMontufar/11811ETE001-ATV2/blob/main/asset/03-Roteiro%20ATV1%20b%201.pdf).
 2. Com o STLink conectado usar o comando no terminal do Ubuntu 20.04:
 ```
 openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c init -c "reset halt" -c "flash write_image erase blinky.bin 0x08000000"
