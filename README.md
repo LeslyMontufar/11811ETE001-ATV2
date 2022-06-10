@@ -52,3 +52,65 @@ bool button_pressed(uint32_t,int);
 
 ```
 
+4. Adicionei ponteiros para os registradores do GPIO A
+```
+uint32_t *pGPIOA_CRL    = (uint32_t *)STM32_GPIOA_CRL;
+uint32_t *pGPIOA_CRH    = (uint32_t *)STM32_GPIOA_CRH;
+uint32_t *pGPIOA_IDR    = (uint32_t *)STM32_GPIOA_IDR;
+```
+
+5. Habilitei o clock do GPIO A, junto com o GPIO C (>> Não sei se precisava)
+```
+reg  = *pRCC_APB2ENR;
+reg |= RCC_APB2ENR_IOPCEN;
+reg |= RCC_APB2ENR_IOPAEN;
+*pRCC_APB2ENR = reg;
+```
+
+6. Configurei a porta A0 como `GPIO_CNF_I_PULL_UP_DOWN` e `GPIO_MODE_INPUT`.
+```
+if(BUTTON_PIN < 8) *pGPIOA_CRL = set_GPIO((uint32_t)*pGPIOA_CRL,BUTTON_PIN,GPIO_CNF_I_PULL_UP_DOWN,GPIO_MODE_INPUT); 
+else *pGPIOA_CRH = set_GPIO((uint32_t)*pGPIOA_CRH,BUTTON_PIN,GPIO_CNF_I_PULL_UP_DOWN,GPIO_MODE_INPUT);
+```
+
+7. Para mudar a velocidade em que o led do pino PC13 pisca criei funções para verificar se o pino A0 está em nível alto, e em caso afirmativo, o led pisca 3x mais rápido.
+```
+while(1)
+{
+    *pGPIOC_BSRR = piscaLed((uint32_t)*pGPIOC_BSRR, LED_PIN, led_status,delay);
+    led_status = !led_status;
+
+    pressed = button_pressed((uint32_t)*pGPIOA_IDR, BUTTON_PIN);
+    if(pressed) delay = LED_DELAY; // rápido
+    else delay = 3*LED_DELAY; // lento
+
+}
+```
+
+```
+uint32_t set_GPIO(uint32_t reg, int led_pin, int cnf, int mode){ 
+
+    reg &= ~GPIO_CNF_MASK(led_pin);
+    reg |= (cnf << GPIO_CNF_SHIFT(led_pin));
+
+    reg &= ~GPIO_MODE_MASK(led_pin);
+    reg |= (mode << GPIO_MODE_SHIFT(led_pin));
+
+    return reg;
+}
+
+uint32_t piscaLed(uint32_t reg, int led_pin, bool led_status, int delay){
+    
+    if(led_status) reg = GPIO_BSRR_SET(led_pin);
+    else reg = GPIO_BSRR_RST(led_pin);
+    for(int i = 0; i < delay; i++);
+
+    return reg;
+}
+
+bool button_pressed(uint32_t reg, int b_pin){
+    reg &= (1 << b_pin);
+    return (reg >= 1);
+}
+```
+

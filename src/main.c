@@ -83,7 +83,6 @@ bool button_pressed(uint32_t,int);
 int main(int argc, char *argv[])
 {
     uint32_t reg; //registrador var auxiliar
-    uint32_t i;
 
     /* Ponteiros para registradores */
     uint32_t *pRCC_APB2ENR  = (uint32_t *)STM32_RCC_APB2ENR;
