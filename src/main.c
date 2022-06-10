@@ -12,7 +12,7 @@
 
 /* APB2 Base Addresses ******************************************************/
 
-#define STM32_GPIOA_BASE    0x40010800      /* 0x40010800 - 0x40010bff: GPIO Port A */ // mudar aqui
+#define STM32_GPIOA_BASE    0x40010800      /* 0x40010800 - 0x40010bff: GPIO Port A */ 
 #define STM32_GPIOC_BASE    0x40011000      /* 0x40011000 - 0x400113ff: GPIO Port C */
 
 /* Register Offsets *********************************************************/

@@ -8,6 +8,7 @@ Trata-se de uma modificação do ambiente bare metal criado no repositório da A
 
 * [Descrição](#descrição)
 * [Desenvolvimento](#desenvolvimento)
+* [Gravando o código no STM32F103](#gravando-o-código-no-stm32f103)
 
 ## Descrição
 
@@ -113,4 +114,19 @@ bool button_pressed(uint32_t reg, int b_pin){
     return (reg >= 1);
 }
 ```
+
+## Gravando o código no STM32F103
+
+1. Para conectar o gravador ST-LINK no WSL2, seguir os passos descritos no [roteiro]().
+2. Com o STLink conectado usar o comando no terminal do Ubuntu 20.04:
+```
+openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c init -c "reset halt" -c "flash write_image erase blinky.bin 0x08000000"
+```
+
+3. Quando o gravador informar que está ouvindo e não der nenhum erro, pressionar `Ctrl+C`.
+```
+Listening ...
+```
+
+4. No STM32F103 pressionar e soltar o botão de `reset`. Pronto, o código foi gravado no microcontrolador.
 
