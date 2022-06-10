@@ -26,13 +26,23 @@ As modificações ocorreram no arquivo [`main.c`](https://github.com/LeslyMontuf
 3. Verificando no Manual de Referência da placa STM32F103xx, posso encontrar o endereço dos registros que precisarei modificar na memória e com quais valores setá-los:
 
 ```
+/* Base Register Addresses *********************************************************/
+
 #define STM32_GPIOA_BASE                0x40010800      /* 0x40010800 - 0x40010bff: GPIO Port A */
 
+/* Register Offsets *********************************************************/
+
 #define STM32_GPIO_IDR_OFFSET           0x0008          /* Port input data register */
+
+/* Register Addresses *******************************************************/
 
 #define STM32_GPIOA_CRL                 (STM32_GPIOA_BASE+STM32_GPIO_CRL_OFFSET)
 #define STM32_GPIOA_CRH                 (STM32_GPIOA_BASE+STM32_GPIO_CRH_OFFSET)
 #define STM32_GPIOA_IDR                 (STM32_GPIOA_BASE+STM32_GPIO_IDR_OFFSET)
+
+/* APB2 Peripheral Clock ENable Register (RCC_APB2ENR) */
+
+#define RCC_APB2ENR_IOPAEN              (1 << 2)        /* Bit 2 IOPAEN: IO port A clock enable */
 
 ```
 
